@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/screen/update_profile_screen.dart';
 class AppBarDesign extends StatelessWidget implements PreferredSizeWidget{
   const AppBarDesign({
-    super.key,
+    super.key, this.fromUpdateProfile,
   });
-
+ final bool? fromUpdateProfile;
 
   @override
   Widget build(BuildContext context) {
     void _onTapProfile(){
+
       Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen(),));
     }
     return GestureDetector(
       onTap: () {
+        if(fromUpdateProfile ?? false ){
+          return;
+        }
         _onTapProfile();
       },
       child: AppBar(
