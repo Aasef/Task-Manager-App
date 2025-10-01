@@ -6,7 +6,7 @@ import 'package:logger/logger.dart';
 class ApiCaller {
   static final Logger _logger = Logger();
 
-   Future<ApiResponse> getResponse({required String url}) async {
+   static Future<ApiResponse> getResponse({required String url}) async {
     try {
       Uri uri = Uri.parse(url);
       _logRequest(url);
