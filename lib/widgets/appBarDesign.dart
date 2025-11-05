@@ -1,63 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager/screen/loginScreen.dart';
 import 'package:task_manager/screen/update_profile_screen.dart';
-class AppBarDesign extends StatelessWidget implements PreferredSizeWidget{
+import 'package:task_manager/ui/controller/auth_controller.dart';
+
+class AppBarDesign extends StatefulWidget implements PreferredSizeWidget {
   const AppBarDesign({
-    super.key, this.fromUpdateProfile,
+    super.key,
+    this.fromUpdateProfile,
   });
- final bool? fromUpdateProfile;
+
+  final bool? fromUpdateProfile;
 
   @override
-  Widget build(BuildContext context) {
-    void _onTapProfile(){
+  State<AppBarDesign> createState() => _AppBarDesignState();
 
-      Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen(),));
+  @override
+  // TODO: implement preferredSize
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+}
+
+class _AppBarDesignState extends State<AppBarDesign> {
+  @override
+  Widget build(BuildContext context) {
+    void _onTapProfile() {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UpdateProfileScreen(),
+          ));
     }
+
     return GestureDetector(
       onTap: () {
-        if(fromUpdateProfile ?? false ){
+        if (widget.fromUpdateProfile ?? false) {
           return;
         }
         _onTapProfile();
       },
       child: AppBar(
         backgroundColor: Colors.green,
-        title:  Padding(
+        title: Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             spacing: 10,
             children: [
-              CircleAvatar(
-
-              ),
-
+              CircleAvatar(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Your Name',style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white
-                  )),
-                  Text('email@gmail.com',style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white
-                  ))
+                  Text( AuthController.userModel?.fullName ?? '',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(color: Colors.white)),
+                  Text(AuthController.userModel?.email ?? '',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyLarge
+                          ?.copyWith(color: Colors.white))
                 ],
-
               )
             ],
           ),
         ),
         actions: [
-          IconButton(onPressed: (){}, icon: Icon(Icons.logout,color: Colors.white,))
+          IconButton(
+              onPressed: _signOut,
+              icon: Icon(
+                Icons.logout,
+                color: Colors.white,
+              ))
         ],
       ),
     );
-
-
   }
 
-  @override
-  // TODO: implement preferredSize
-  Size get preferredSize => Size.fromHeight(56);
-
-
-
+  Future<void> _signOut() async {
+    AuthController.clearData();
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LoginScreen(),
+        ),
+        (predicate) => false);
+  }
 }

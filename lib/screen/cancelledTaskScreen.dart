@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/model/task_model.dart';
+import '../data/model/task_status_count_model.dart';
+import '../data/service/api_caller.dart';
+import '../data/url.dart';
 import '../widgets/cardForNewTaskScreen.dart';
+import 'newTaskScreen.dart';
 
 class Cancelledtaskscreen extends StatefulWidget {
   const Cancelledtaskscreen({super.key});
@@ -10,44 +15,57 @@ class Cancelledtaskscreen extends StatefulWidget {
 }
 
 class _CancelledtaskscreenState extends State<Cancelledtaskscreen> {
+
+
+  bool _getCancelledTaskInProgress = false;
+  List<TaskStatusCountModel> _taskStatusCountList = [];
+  List<TaskModel> _cancelledTaskStatusList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _getCancelledTask();
+  }
+
+
+
+  Future<void> _getCancelledTask() async {
+    //_getTaskStatusCountProgress = true;
+    _getCancelledTaskInProgress = true;
+    setState(() {});
+    final ApiResponse response =
+    await ApiCaller.getResponse(url: Urls.taskByStatusCancelled);
+    if (response.isSucess) {
+      List<TaskModel> newList = [];
+      for (Map<String, dynamic> jsonData in response.responseData['data']) {
+        newList.add(TaskModel.fromJson(jsonData));
+      }
+      _cancelledTaskStatusList = newList;
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.errorMessage!)));
+    }
+    _getCancelledTaskInProgress = false;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
 
+
           Expanded(
-              child: ListView.separated(
-
+              child: Visibility(
+                visible: _getCancelledTaskInProgress == false,
+                replacement: Center(child: CircularProgressIndicator()),
+                child: ListView.separated(
+                  itemCount: _cancelledTaskStatusList.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      shape: RoundedRectangleBorder( borderRadius: BorderRadiusGeometry.circular(10)),
-                      tileColor: Colors.white,
-                      title: Text('Text Will be Here'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Text('Description'),
-                          Text('Date: 20/09/2025'),
-                          Row(
-                            children: [
-                              Chip(
-
-                                label: Text('Cancelled', style: TextStyle(color: Colors.white),),
-                                backgroundColor: Colors.red,
-                                padding: EdgeInsetsDirectional.symmetric(horizontal: 20),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(20)),
-
-
-                              ),
-                              Spacer(),
-                              IconButton(onPressed: (){}, icon: Icon(Icons.update, color: Colors.green,)),
-                              IconButton(onPressed: (){}, icon: Icon(Icons.delete, color: Colors.red,))
-                            ],
-                          )
-                        ],
-                      ),
+                    return NewTaskList(
+                      taskModel: _cancelledTaskStatusList[index],
                     );
                   },
                   separatorBuilder: (context, index) {
@@ -55,9 +73,11 @@ class _CancelledtaskscreenState extends State<Cancelledtaskscreen> {
                       height: 10,
                     );
                   },
-                  itemCount: 3))
+                ),
+              ))
         ],
       ),
     );
   }
-}
+  }
+

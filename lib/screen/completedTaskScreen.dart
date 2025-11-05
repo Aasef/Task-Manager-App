@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../data/model/task_model.dart';
+import '../data/model/task_status_count_model.dart';
+import '../data/service/api_caller.dart';
+import '../data/url.dart';
 import '../widgets/cardForNewTaskScreen.dart';
+import 'newTaskScreen.dart';
 
 class Completedtaskscreen extends StatefulWidget {
   const Completedtaskscreen({super.key});
@@ -10,44 +15,56 @@ class Completedtaskscreen extends StatefulWidget {
 }
 
 class _CompletedtaskscreenState extends State<Completedtaskscreen> {
+
+  bool _getCompletedTaskInProgress = false;
+  List<TaskStatusCountModel> _taskStatusCountList = [];
+  List<TaskModel> _completedTaskStatusList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _getCompletedTask();
+  }
+
+
+
+  Future<void> _getCompletedTask() async {
+    //_getTaskStatusCountProgress = true;
+    _getCompletedTaskInProgress = true;
+    setState(() {});
+    final ApiResponse response =
+    await ApiCaller.getResponse(url: Urls.taskByStatusCompleted);
+    if (response.isSucess) {
+      List<TaskModel> newList = [];
+      for (Map<String, dynamic> jsonData in response.responseData['data']) {
+        newList.add(TaskModel.fromJson(jsonData));
+      }
+      _completedTaskStatusList = newList;
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.errorMessage!)));
+    }
+    _getCompletedTaskInProgress = false;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
 
+
           Expanded(
-              child: ListView.separated(
-
+              child: Visibility(
+                visible: _getCompletedTaskInProgress == false,
+                replacement: Center(child: CircularProgressIndicator()),
+                child: ListView.separated(
+                  itemCount: _completedTaskStatusList.length,
                   itemBuilder: (context, index) {
-                    return ListTile(
-                      shape: RoundedRectangleBorder( borderRadius: BorderRadiusGeometry.circular(10)),
-                      tileColor: Colors.white,
-                      title: Text('Text Will be Here'),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Text('Description'),
-                          Text('Date: 20/09/2025'),
-                          Row(
-                            children: [
-                              Chip(
-
-                                label: Text('Completed', style: TextStyle(color: Colors.white),),
-                                backgroundColor: Colors.green,
-                                padding: EdgeInsetsDirectional.symmetric(horizontal: 20),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(20)),
-
-
-                              ),
-                              Spacer(),
-                              IconButton(onPressed: (){}, icon: Icon(Icons.update, color: Colors.green,)),
-                              IconButton(onPressed: (){}, icon: Icon(Icons.delete, color: Colors.red,))
-                            ],
-                          )
-                        ],
-                      ),
+                    return NewTaskList(
+                      taskModel: _completedTaskStatusList[index],
                     );
                   },
                   separatorBuilder: (context, index) {
@@ -55,9 +72,12 @@ class _CompletedtaskscreenState extends State<Completedtaskscreen> {
                       height: 10,
                     );
                   },
-                  itemCount: 3))
+                ),
+              ))
         ],
       ),
     );
   }
 }
+
+

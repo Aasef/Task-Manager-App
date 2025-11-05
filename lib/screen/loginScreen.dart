@@ -1,9 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/data/model/user_model.dart';
+import 'package:task_manager/data/service/api_caller.dart';
 import 'package:task_manager/screen/forgot_password_emai_varify.dart';
 import 'package:task_manager/screen/signUpScreen.dart';
 import 'package:task_manager/screen_background.dart';
+import 'package:task_manager/ui/controller/auth_controller.dart';
 
+import '../data/url.dart';
 import 'mainScreenAfterLogin.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -88,14 +92,34 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _apiCallForLogin() async {
+    Map<String, dynamic> _takeingDataForLogin = {
+      "email": _emailTEcontroller.text,
+      "password": _passwordTEcontroller.text
+    };
+    final ApiResponse response = await ApiCaller.postResponse(
+        url: Urls.loginUrl, body: _takeingDataForLogin);
+    if (response.isSucess && response.responseData['status'] == 'success') {
+      UserModel model = UserModel.fromJson(response.responseData['data']);
+      String accessToken = response.responseData['token'];
+      await AuthController.saveUserData(model, accessToken);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScreenAfterLogin(),
+        ),
+        (padicate) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.responseData)));
+    }
+  }
+
   void _onTapLoginButton() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MainScreenAfterLogin(),
-      ),
-      (padicate) => false,
-    );
+    if (_formKey.currentState!.validate()) {
+      _apiCallForLogin();
+    }
   }
 
   void _onTapSignUpButton() {

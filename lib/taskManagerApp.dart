@@ -3,11 +3,13 @@ import 'package:task_manager/screen/splash_screen.dart';
 
 class TaskManagerApp extends StatelessWidget {
   const TaskManagerApp({super.key});
-
+  static GlobalKey<NavigatorState> navigator=GlobalKey<NavigatorState>();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigator,
       theme: ThemeData(
+
           textTheme: TextTheme(
               titleLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
               ),

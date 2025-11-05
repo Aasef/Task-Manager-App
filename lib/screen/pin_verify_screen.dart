@@ -1,13 +1,23 @@
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:task_manager/data/model/user_model.dart';
+import 'package:task_manager/data/service/api_caller.dart';
 import 'package:task_manager/screen/loginScreen.dart';
 import 'package:task_manager/screen/set_password_screen.dart';
 import 'package:task_manager/screen/signUpScreen.dart';
 import 'package:task_manager/screen_background.dart';
 
+import '../data/url.dart';
+
 class Pinverify extends StatefulWidget {
-  const Pinverify({super.key});
+  const Pinverify({
+    super.key,
+    required this.gettingEmail,
+  });
+
+  final String gettingEmail;
 
   @override
   State<Pinverify> createState() => _PinverifyState();
@@ -60,6 +70,12 @@ class _PinverifyState extends State<Pinverify> {
                   //errorAnimationController: errorController,
                   controller: _pinTEcontroller,
                   appContext: context,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter right pin';
+                    }
+                    return null;
+                  },
                 ),
                 SizedBox(
                   height: 5,
@@ -67,7 +83,11 @@ class _PinverifyState extends State<Pinverify> {
                 SizedBox(
                   height: 10,
                 ),
-                FilledButton(onPressed: _onTapVerifyButton, child: Text('Verify')),
+                FilledButton(
+                    onPressed: () {
+                      _onTapVerifyButton(widget.gettingEmail);
+                    },
+                    child: Text('Verify')),
                 SizedBox(
                   height: 10,
                 ),
@@ -96,12 +116,36 @@ class _PinverifyState extends State<Pinverify> {
     );
   }
 
-  void _onTapVerifyButton() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Setpassword(),
-        ));
+  Future<void> _submitPin(gettingEmail) async {
+    Map<String, dynamic> requestBody = {'otp': _pinTEcontroller.text};
+
+    final ApiResponse response = await ApiCaller.getResponse(
+        url: Urls.otpVerify(gettingEmail, requestBody['otp']));
+    if (response.isSucess) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('OTP Verified')));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Setpassword(
+              email: gettingEmail,
+              otp: requestBody['otp'],
+            ),
+          ));
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.errorMessage!)));
+    }
+  }
+
+  // void _writingPin()async{
+  //   await EmailOTP.verifyOTP(otp: _pinTEcontroller.text);
+  // }
+  void _onTapVerifyButton(gettingEmail) {
+    if (_formKey.currentState!.validate()) {
+      ;
+      _submitPin(gettingEmail);
+    }
   }
 
   void _onTapSignUpButton() {
@@ -109,10 +153,8 @@ class _PinverifyState extends State<Pinverify> {
         context,
         MaterialPageRoute(
           builder: (context) => LoginScreen(),
-
         ),
-            (protecte)=> false
-    );
+        (protecte) => false);
   }
 
   @override

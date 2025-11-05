@@ -1,9 +1,14 @@
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/data/service/api_caller.dart';
 import 'package:task_manager/screen/loginScreen.dart';
 import 'package:task_manager/screen/pin_verify_screen.dart';
 import 'package:task_manager/screen/signUpScreen.dart';
 import 'package:task_manager/screen_background.dart';
+
+import '../data/url.dart';
+//import 'package:email_otp/email_otp.dart';
 
 class EmailVerify extends StatefulWidget {
   const EmailVerify({super.key});
@@ -46,6 +51,13 @@ class _EmailVerifyState extends State<EmailVerify> {
                   decoration: InputDecoration(
                     hintText: 'Email',
                   ),
+                  validator: (value) {
+                    if(value==null || value.isEmpty){
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+
                 ),
                 SizedBox(
                   height: 5,
@@ -85,13 +97,34 @@ class _EmailVerifyState extends State<EmailVerify> {
       )),
     );
   }
-
+  Future<void> _sendingOTP()async{
+    Map<String,dynamic> requestBody={
+      "email":_emailTEcontroller.text
+    };
+    final ApiResponse response = await ApiCaller.getResponse(
+        url: Urls.emailVerify(requestBody['email']));
+    if(response.isSucess){
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('OTP has been sent')));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Pinverify(gettingEmail: _emailTEcontroller.text,),
+          ));
+    }else{
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(response.errorMessage!)));
+    }
+  }
+  // void _sendingOTP()async{
+  //   await EmailOTP.sendOTP(email: _emailTEcontroller.text);
+  // }
   void _onTabEmailVerifyButton() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Pinverify(),
-        ));
+    if(_formKey.currentState!.validate()){
+       _sendingOTP();
+
+    }
+
   }
 
   void _onTapSignUpButton() {
